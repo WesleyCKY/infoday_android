@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import edu.hkbu17225736.comp4097.infoday.Network
@@ -58,33 +59,48 @@ class NewslistFragment : Fragment() {
 
     }
 
+//    private fun reloadData(recyclerView: RecyclerView) {
+//        val NEWS_URL = "https://api.npoint.io/256da2ee7badc12b0ec2"
+//        CoroutineScope(Dispatchers.IO).launch {
+//            try {
+//                val json = async {
+//                    try {
+//                        Network.getTextFromNetwork(NEWS_URL)
+//                    }catch (e: Exception){
+//                        println("Error in getTextFromNetwork: $e")
+//                        null
+//                    }
+//                }
+//                withTimeout(1500L){
+//                    val news =
+//                        Gson().fromJson<List<News>>(json.await(), object : TypeToken<List<News>>() {}.type)
+//                    if (news == null)
+//                        throw IOException("getting error in network")
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        recyclerView.adapter = NewsRecyclerViewAdapter(news)
+//                    }
+//                }
+//
+//            } catch (e: Exception) {
+//                Log.d("NewsListFragment", "Error in loading data")
+//                val news = listOf(News("", "Cannot fetch news", "Please check your network connection,"))
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    recyclerView.adapter = NewsRecyclerViewAdapter(news)
+//                }
+//            }
+//        }
+//    }
     private fun reloadData(recyclerView: RecyclerView) {
-        val NEWS_URL = "https://api.npoint.io/256da2ee7badc12b0ec2"
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val json = async {
-                    try {
-                        Network.getTextFromNetwork(NEWS_URL)
-                    }catch (e: Exception){
-                        println("Error in getTextFromNetwork: $e")
-                        null
-                    }
-                }
-                withTimeout(1500L){
-                    val news =
-                        Gson().fromJson<List<News>>(json.await(), object : TypeToken<List<News>>() {}.type)
-                    if (news == null)
-                        throw IOException("getting error in network")
-                    CoroutineScope(Dispatchers.Main).launch {
-                        recyclerView.adapter = NewsRecyclerViewAdapter(news)
-                    }
-                }
+        val db = FirebaseFirestore.getInstance()
 
-            } catch (e: Exception) {
-                Log.d("NewsListFragment", "Error in loading data")
-                val news = listOf(News("", "Cannot fetch news", "Please check your network connection,"))
+        db.collection("news").addSnapshotListener { value, error ->
+            value?.let {
                 CoroutineScope(Dispatchers.Main).launch {
-                    recyclerView.adapter = NewsRecyclerViewAdapter(news)
+                    recyclerView.adapter = NewsRecyclerViewAdapter(it.documents.map { doc ->
+                        News(doc.getString("image")!!,
+                            doc.getString("title")!!,
+                            doc.getString("detail")!!)
+                    })
                 }
             }
         }

@@ -1,5 +1,6 @@
 package edu.hkbu17225736.comp4097.infoday
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -10,6 +11,9 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.firebase.auth.FirebaseAuth
+import edu.hkbu17225736.comp4097.infoday.data.Code
+import edu.hkbu17225736.comp4097.infoday.ui.login.LoginActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -51,5 +55,10 @@ override fun onResume() {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES) } else {
         //switch to day mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO) }
+
+        if (FirebaseAuth.getInstance().currentUser == null){
+            startActivityForResult(Intent(this, LoginActivity::class.java), Code.LOGIN_RESULT)
+            //Finally, we modify MainActivity to start LoginActivity in onResume by checking currentUser in FirebaseAuth.
+        }
     }
 }
